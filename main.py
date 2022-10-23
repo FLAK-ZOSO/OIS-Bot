@@ -54,23 +54,7 @@ async def create_team(
     embed.add_field(name="Team City", value=team_city, inline=False)
     embed.add_field(name="Team Leader", value=team_leader.mention, inline=False)
     embed.set_footer(text="Send :white_check_mark: quickly to confirm the creation of the team")
-    message: Message = await interaction.response.send_message(embed=embed, ephemeral=False)
-
-    '''
-    try:
-        msg = await OIS.wait_for(
-            "message",
-            check=lambda m: (
-                m.author == team_leader 
-                and m.channel == interaction.channel 
-                and ":white_check_mark:" in m.content
-            ),
-            timeout=60
-        )
-    except TimeoutError:
-        await interaction.channel.send("You took too long to react, please try again", ephemeral=True)
-        return
-    '''
+    await interaction.response.send_message(embed=embed, ephemeral=False)
 
     if (role := get(interaction.guild.roles, name=team_name)) is not None:
         await interaction.channel.send("A team with this name already exists")
