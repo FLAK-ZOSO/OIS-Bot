@@ -26,4 +26,9 @@ OIS = Bot(
 )
 
 
+@OIS.event
+async def on_ready() -> None:
+    print(f"{OIS.user.name}#{OIS.user.discriminator} is online")
+
+
 OIS.run(open("token.txt", "r").read())
