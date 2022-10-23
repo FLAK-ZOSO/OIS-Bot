@@ -24,3 +24,6 @@ OIS = Bot(
     status=nextcord.Status.online,
     intents=nextcord.Intents.all(),
 )
+
+
+OIS.run(open("token.txt", "r").read())
