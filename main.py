@@ -104,6 +104,6 @@ async def create_team(
     # Manage permissions of the channel for the team members
     channel_permissions = channel.permissions_for(role)
     channel_permissions = nextcord.Permissions.all()
-        
+
 
 OIS.run(open("token.txt", "r").read())
