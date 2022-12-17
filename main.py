@@ -34,6 +34,21 @@ async def on_ready() -> None:
     print(f"{OIS.user.name}#{OIS.user.discriminator} is online")
 
 
+@OIS.slash_command(name="delete", description="Delete the last N messages")
+async def delete(
+        interaction: Interaction,
+        number: int = SlashOption(
+            name="number",
+            description="The number of messages to delete",
+            required=True,
+        )) -> None:
+    if not interaction.user.guild_permissions.administrator:
+        await interaction.response.send_message("You must be the owner of the server to use this command", ephemeral=True)
+        return
+    await interaction.channel.purge(limit=number + 1)
+    await interaction.response.send_message(f"Deleted {number} messages", ephemeral=True)
+
+
 @OIS.slash_command(name="create_team", description="Create your team")
 async def create_team(
         interaction: Interaction,
