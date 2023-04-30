@@ -4,7 +4,8 @@ from asyncio import create_task, Task, wait, FIRST_COMPLETED
 
 import nextcord
 from nextcord.ext.commands import Bot, Context, command, has_permissions
-from nextcord import SlashOption, User, Member, Role
+from nextcord.ext import application_checks
+from nextcord import SlashOption, User, Member, Role, application_command
 from nextcord.abc import GuildChannel, Messageable
 from nextcord.activity import Activity, ActivityType
 from nextcord.interactions import Interaction
@@ -75,8 +76,8 @@ async def create_team(
         await interaction.channel.send("A team with this name already exists")
     else:
         role: Role = await interaction.guild.create_role(
-            name=team_name, 
-            color=Color.random(), 
+            name=team_name,
+            color=Color.random(),
             hoist=True
         )
         await interaction.channel.send("Role created successfully")
@@ -84,7 +85,7 @@ async def create_team(
     # Assign the role to the team leader
     await team_leader.add_roles(role)
     await interaction.channel.send("Role assigned successfully")
-    
+
     # Create channel (https://stackoverflow.com/questions/68235517/creating-a-channel-in-specific-category-the-category-id-is-should-be-variable)
     category = get(interaction.guild.categories, id=CATEGORY_TEAMS)
     channel: GuildChannel = await interaction.guild.create_text_channel(
@@ -92,17 +93,28 @@ async def create_team(
         category=category,
         topic=f"{team_name} - {team_city}",
         reason=f"Team {team_name} creation"
-    )    
+    )
     await interaction.channel.send("Channel created successfully")
-    
+
     # Manage permissions of the channel for @everyone
     channel_permissions = channel.permissions_for(interaction.guild.default_role)
     channel_permissions.send_messages = False
     channel_permissions.add_reactions = True
-    
+
     # Manage permissions of the channel for the team members
     channel_permissions = channel.permissions_for(role)
     channel_permissions = nextcord.Permissions.all()
 
+
+@OIS.slash_command(name="embed", description="Embed message given its url")
+@application_checks.has_permissions(administrator=True)
+async def embed(interaction: Interaction, message_link: str):
+    message_metadata = message_link.split("/")
+    message_channel = interaction.guild.get_channel(int(message_metadata[5]))
+    message = await message_channel.fetch_message(int(message_metadata[6]))
+    embedded_response = Embed(description=message.content + f"\n\n[**Jump to message**]({message.jump_url})")
+    if len(message.attachments) != 0:
+        embedded_response.set_image(url=message.attachments[0])
+    await interaction.response.send_message(embed=embedded_response)
 
 OIS.run(open("token.txt", "r").read())
