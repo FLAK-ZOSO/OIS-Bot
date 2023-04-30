@@ -130,7 +130,7 @@ async def hall_of_fame(interaction: Interaction, source_channel: TextChannel) ->
     await target_channel.send(f"**Hall of Fame for {source_channel.mention}!**")
     pinned = await source_channel.pins()
     for message in reversed(pinned):
-        embedded_response = await make_embedded_message(message)
+        embedded_response = make_embedded_message(message)
         await target_channel.send(embed=embedded_response)
     await interaction.channel.send(f"Hall of Fame for {source_channel.mention} created in {target_channel.mention}!")
 
@@ -145,7 +145,7 @@ async def unpin_all(interaction: Interaction, target_channel: Optional[TextChann
     await interaction.response.send_message(f"Unpinned all pins in {target_channel.mention}")
 
 
-async def make_embedded_message(message: Message) -> Embed:
+def make_embedded_message(message: Message) -> Embed:
     embedded_response = Embed(
         title=f"Message from {message.channel.mention}",
         description=message.content + f"\n\n[**Jump to message**]({message.jump_url})"
