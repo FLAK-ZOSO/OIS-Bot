@@ -108,7 +108,6 @@ async def create_team(
 
 
 @OIS.slash_command(name="embed", description="Embed message given its url")
-@application_checks.has_permissions(administrator=True)
 async def embed(interaction: Interaction, message_link: str):
     message_metadata = message_link.split("/")
     message_channel = interaction.guild.get_channel(int(message_metadata[5]))
