@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 from asyncio import create_task, Task, wait, FIRST_COMPLETED
+from typing import Optional
 
 import nextcord
 from nextcord.ext.commands import Bot, Context, command, has_permissions
@@ -134,6 +135,14 @@ async def hall_of_fame(interaction: Interaction, source_channel: TextChannel) ->
     await interaction.channel.send(f"Hall of Fame for {source_channel.mention} created in {target_channel.mention}!")
 
 
+@OIS.slash_command(name="unpin_all", description="Unpin all pinned messages of a channel")
+@application_checks.has_permissions(administrator=True)
+async def unpin_all(interaction: Interaction, target_channel: Optional[TextChannel] = SlashOption(required=False)) -> None:
+    target_channel = target_channel or interaction.channel
+    pinned = await target_channel.pins()
+    for pin in pinned:
+        await pin.unpin()
+    await interaction.response.send_message(f"Unpinned all pins in {target_channel.mention}")
 
 
 async def make_embedded_message(message: Message) -> Embed:
