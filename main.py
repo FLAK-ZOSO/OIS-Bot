@@ -114,12 +114,13 @@ async def embed(interaction: Interaction, message_link: str):
     message_channel = interaction.guild.get_channel(int(message_metadata[5]))
     message = await message_channel.fetch_message(int(message_metadata[6]))
     embedded_response = Embed(
-        title=message.channel.mention,
+        title=f"Message from {message.channel.mention}",
         description=message.content + f"\n\n[**Jump to message**]({message.jump_url})"
     )
     embedded_response.set_author(name=message.author, icon_url=message.author.display_avatar)
     if len(message.attachments) != 0:
         embedded_response.set_image(url=message.attachments[0])
+    embedded_response.set_footer(text=f"Message ID: {message.id}")
     await interaction.response.send_message(embed=embedded_response)
 
 
