@@ -110,18 +110,11 @@ async def create_team(
 
 
 @OIS.slash_command(name="embed", description="Embed message given its url")
-async def embed(interaction: Interaction, message_link: str):
+async def embed(interaction: Interaction, message_link: str) -> None:
     message_metadata = message_link.split("/")
     message_channel = interaction.guild.get_channel(int(message_metadata[5]))
     message = await message_channel.fetch_message(int(message_metadata[6]))
-    embedded_response = Embed(
-        title=f"Message from {message.channel.mention}",
-        description=message.content + f"\n\n[**Jump to message**]({message.jump_url})"
-    )
-    embedded_response.set_author(name=message.author, icon_url=message.author.display_avatar)
-    if len(message.attachments) != 0:
-        embedded_response.set_image(url=message.attachments[0])
-    embedded_response.set_footer(text=f"Message ID: {message.id}")
+    embedded_response = make_embedded_message(message)
     await interaction.response.send_message(embed=embedded_response)
 
 
@@ -136,15 +129,23 @@ async def hall_of_fame(interaction: Interaction, source_channel: TextChannel) ->
     await target_channel.send(f"**Hall of Fame for {source_channel.mention}!**")
     pinned = await source_channel.pins()
     for message in reversed(pinned):
-        embedded_response = Embed(
-            title=f"Message from {message.channel.mention}",
-            description=message.content + f"\n\n[**Jump to message**]({message.jump_url})"
-        )
-        embedded_response.set_author(name=message.author, icon_url=message.author.display_avatar)
-        if len(message.attachments):
-            embedded_response.set_image(url=message.attachments[0])
-        embedded_response.set_footer(text=f"Message ID: {message.id}")
+        embedded_response = await make_embedded_message(message)
         await target_channel.send(embed=embedded_response)
     await interaction.channel.send(f"Hall of Fame for {source_channel.mention} created in {target_channel.mention}!")
+
+
+
+
+async def make_embedded_message(message: Message) -> Embed:
+    embedded_response = Embed(
+        title=f"Message from {message.channel.mention}",
+        description=message.content + f"\n\n[**Jump to message**]({message.jump_url})"
+    )
+    embedded_response.set_author(name=message.author, icon_url=message.author.display_avatar)
+    if len(message.attachments):
+        embedded_response.set_image(url=message.attachments[0])
+    embedded_response.set_footer(text=f"Message ID: {message.id}")
+    return embedded_response
+
 
 OIS.run(open("token.txt").read().strip())
