@@ -10,6 +10,8 @@ from nextcord.abc import GuildChannel, Messageable
 from nextcord.activity import Activity, ActivityType
 from nextcord.interactions import Interaction
 from nextcord.message import Message
+from nextcord.channel import TextChannel
+from nextcord.threads import Thread
 from nextcord.embeds import Embed
 from nextcord.colour import Color
 from nextcord.utils import get
@@ -123,4 +125,26 @@ async def embed(interaction: Interaction, message_link: str):
     await interaction.response.send_message(embed=embedded_response)
 
 
-OIS.run(open("token.txt", "r").read())
+@OIS.slash_command(name="hall_of_fame", description="Create the Hall of Fame for a channel from its pinned messages")
+async def hall_of_fame(interaction: Interaction, source_channel: TextChannel) -> None:
+    target_channel: Thread = await source_channel.create_thread(
+        name=f"Hall of Fame",
+        reason="Hall of Fame",
+        type=nextcord.ChannelType.public_thread
+    )
+    await interaction.channel.send(f"Creating Hall of Fame for {source_channel.mention} in {target_channel.mention}...")
+    await target_channel.send(f"**Hall of Fame for {source_channel.mention}!**")
+    pinned = await source_channel.pins()
+    for message in reversed(pinned):
+        embedded_response = Embed(
+            title=f"Message from {message.channel.mention}",
+            description=message.content + f"\n\n[**Jump to message**]({message.jump_url})"
+        )
+        embedded_response.set_author(name=message.author, icon_url=message.author.display_avatar)
+        if len(message.attachments):
+            embedded_response.set_image(url=message.attachments[0])
+        embedded_response.set_footer(text=f"Message ID: {message.id}")
+        await target_channel.send(embed=embedded_response)
+    await interaction.channel.send(f"Hall of Fame for {source_channel.mention} created in {target_channel.mention}!")
+
+OIS.run(open("token.txt").read().strip())
