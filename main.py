@@ -18,7 +18,6 @@ from nextcord.errors import Forbidden, HTTPException
 
 CATEGORY_TEAMS = 1033500272372228277
 
-
 OIS = Bot(
     command_prefix=("OIS)"),
     strip_after_prefix=True,
@@ -44,7 +43,8 @@ async def delete(
             required=True,
         )) -> None:
     if not interaction.user.guild_permissions.administrator:
-        await interaction.response.send_message("You must be the owner of the server to use this command", ephemeral=True)
+        await interaction.response.send_message("You must be the owner of the server to use this command",
+                                                ephemeral=True)
         return
     await interaction.channel.purge(limit=number + 1)
     await interaction.response.send_message(f"Deleted {number} messages", ephemeral=True)
@@ -65,7 +65,8 @@ async def create_team(
         )) -> None:
     team_leader = interaction.user
 
-    embed = Embed(title="Team Creation", description="Send :white_check_mark: if you are sure of the following.", color=Color.green())
+    embed = Embed(title="Team Creation", description="Send :white_check_mark: if you are sure of the following.",
+                  color=Color.green())
     embed.add_field(name="Team Name", value=team_name, inline=False)
     embed.add_field(name="Team City", value=team_city, inline=False)
     embed.add_field(name="Team Leader", value=team_leader.mention, inline=False)
@@ -112,9 +113,14 @@ async def embed(interaction: Interaction, message_link: str):
     message_metadata = message_link.split("/")
     message_channel = interaction.guild.get_channel(int(message_metadata[5]))
     message = await message_channel.fetch_message(int(message_metadata[6]))
-    embedded_response = Embed(description=message.content + f"\n\n[**Jump to message**]({message.jump_url})")
+    embedded_response = Embed(
+        title=message.channel.mention,
+        description=message.content + f"\n\n[**Jump to message**]({message.jump_url})"
+    )
+    embedded_response.set_author(name=message.author, icon_url=message.author.display_avatar)
     if len(message.attachments) != 0:
         embedded_response.set_image(url=message.attachments[0])
     await interaction.response.send_message(embed=embedded_response)
+
 
 OIS.run(open("token.txt", "r").read())
