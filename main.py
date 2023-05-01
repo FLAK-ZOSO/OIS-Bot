@@ -117,9 +117,9 @@ async def embed(interaction: Interaction, message_link: str) -> None:
     message = await message_channel.fetch_message(int(message_metadata[6]))
     embedded_response = make_embedded_message(message)
     if len(embedded_response) == 1:
-        await interaction.response.send_message(embed=embedded_response[0], ephemeral=True)
+        await interaction.response.send_message(embed=embedded_response[0])
     else:
-        await interaction.response.send_message(embeds=embedded_response, ephemeral=True)
+        await interaction.response.send_message(embeds=embedded_response)
 
 
 @OIS.slash_command(name="hall_of_fame", description="Create the Hall of Fame for a channel from its pinned messages")
