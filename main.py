@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 import json
 from asyncio import create_task, Task, wait, FIRST_COMPLETED
-from typing import Optional
+from typing import Optional, Tuple, List
 
 import nextcord
 from nextcord.ext.commands import Bot, Context, command, has_permissions
 from nextcord.ext import application_checks
-from nextcord import SlashOption, User, Member, Role, application_command
+from nextcord import SlashOption, User, Member, Role, application_command, Embed, Attachment
 from nextcord.abc import GuildChannel, Messageable
 from nextcord.activity import Activity, ActivityType
 from nextcord.interactions import Interaction
@@ -116,7 +116,10 @@ async def embed(interaction: Interaction, message_link: str) -> None:
     message_channel = interaction.guild.get_channel(int(message_metadata[5]))
     message = await message_channel.fetch_message(int(message_metadata[6]))
     embedded_response = make_embedded_message(message)
-    await interaction.response.send_message(embed=embedded_response)
+    if len(embedded_response) == 1:
+        await interaction.response.send_message(embed=embedded_response[0], ephemeral=True)
+    else:
+        await interaction.response.send_message(embeds=embedded_response, ephemeral=True)
 
 
 @OIS.slash_command(name="hall_of_fame", description="Create the Hall of Fame for a channel from its pinned messages")
@@ -131,13 +134,17 @@ async def hall_of_fame(interaction: Interaction, source_channel: TextChannel) ->
     pinned = await source_channel.pins()
     for message in reversed(pinned):
         embedded_response = make_embedded_message(message)
-        await target_channel.send(embed=embedded_response)
+        if len(embedded_response) == 1:
+            await target_channel.send(embed=embedded_response[0])
+        else:
+            await target_channel.send(embeds=embedded_response)
     await interaction.channel.send(f"Hall of Fame for {source_channel.mention} created in {target_channel.mention}!")
 
 
 @OIS.slash_command(name="unpin_all", description="Unpin all pinned messages of a channel")
 @application_checks.has_permissions(administrator=True)
-async def unpin_all(interaction: Interaction, target_channel: Optional[TextChannel] = SlashOption(required=False)) -> None:
+async def unpin_all(interaction: Interaction,
+                    target_channel: Optional[TextChannel] = SlashOption(required=False)) -> None:
     target_channel = target_channel or interaction.channel
     pinned = await target_channel.pins()
     for pin in pinned:
@@ -145,15 +152,24 @@ async def unpin_all(interaction: Interaction, target_channel: Optional[TextChann
     await interaction.response.send_message(f"Unpinned all pins in {target_channel.mention}")
 
 
-def make_embedded_message(message: Message) -> Embed:
+def make_embedded_message(message: Message) -> list[Embed]:
     embedded_response = Embed(
         title=f"Message from {message.channel.mention}",
+        url=message.jump_url,
         description=message.content + f"\n\n[**Jump to message**]({message.jump_url})"
     )
     embedded_response.set_author(name=message.author, icon_url=message.author.display_avatar)
-    if len(message.attachments):
-        embedded_response.set_image(url=message.attachments[0])
     embedded_response.set_footer(text=f"Message ID: {message.id}")
+    embedded_response = [embedded_response]
+    if len(message.attachments) == 1:
+        embedded_response[0].set_image(url=message.attachments)
+    elif len(message.attachments) > 1:
+        for attachment in message.attachments:
+            if attachment.content_type.startswith("video"):
+                continue
+            new_embed = Embed(url=message.jump_url)  # We need all embeds to have the same url for this to work
+            new_embed.set_image(url=attachment)
+            embedded_response.append(new_embed)
     return embedded_response
 
 
