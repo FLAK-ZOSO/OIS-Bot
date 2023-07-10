@@ -133,9 +133,15 @@ async def hall_of_fame(interaction: Interaction, source_channel: TextChannel) ->
     await target_channel.send(f"**Hall of Fame for {source_channel.mention}!**")
     pinned = await source_channel.pins()
     for message in reversed(pinned):
-        embedded_response = make_embedded_message(message)
+        try:
+            embedded_response = make_embedded_message(message)
+        except HTTPException:
+            await target_channel.send("<Error-processing-message>")
         if len(embedded_response) == 1:
-            await target_channel.send(embed=embedded_response[0])
+            try:
+                await target_channel.send(embed=embedded_response[0])
+            except HTTPException:
+                await target_channel.send("<Error-processing-message>")
         else:
             await target_channel.send(embeds=embedded_response)
     await interaction.channel.send(f"Hall of Fame for {source_channel.mention} created in {target_channel.mention}!")
