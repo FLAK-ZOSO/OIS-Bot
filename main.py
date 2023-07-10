@@ -168,7 +168,7 @@ def make_embedded_message(message: Message) -> list[Embed]:
     embedded_response.set_footer(text=f"Message ID: {message.id}")
     embedded_response = [embedded_response]
     if len(message.attachments) == 1:
-        embedded_response[0].set_image(url=message.attachments)
+        embedded_response[0].set_image(url=message.attachments[0])
     elif len(message.attachments) > 1:
         for attachment in message.attachments:
             if attachment.content_type.startswith("video"):
