@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import asyncio
 from asyncio import create_task, Task, wait, FIRST_COMPLETED
 from typing import Optional, Tuple, List
 
@@ -156,6 +157,36 @@ async def unpin_all(interaction: Interaction,
     for pin in pinned:
         await pin.unpin()
     await interaction.response.send_message(f"Unpinned all pins in {target_channel.mention}")
+
+
+@OIS.slash_command(name="reaction_role", description="Create a reaction role message")
+@application_checks.has_permissions(administrator=True)
+async def reaction_role(interaction: Interaction, emoji: str, role: Role, timeout: int=None) -> None:
+    embed = Embed(
+        title="Reaction Role",
+        description=f"React with {emoji} to get the {role.mention} role",
+        color=Color.green()
+    )
+    message = await interaction.channel.send(embed=embed)
+    await message.add_reaction(emoji)
+    asyncio.create_task(reaction_role_listener(message, emoji, role, timeout))
+
+
+async def reaction_role_listener(message: Message, emoji: str, role: Role, timeout_seconds: int=None) -> None:
+    while True:
+        try:
+            reaction: nextcord.Reaction
+            user: nextcord.Member
+            if timeout_seconds is None:
+                reaction, user = await OIS.wait_for("reaction_add")
+            else:
+                reaction, user = await OIS.wait_for("reaction_add", timeout=timeout_seconds)
+        except TimeoutError:
+            await message.remove_reaction(emoji, OIS.user)
+            return
+        if reaction.message.id == message.id and str(reaction.emoji) == emoji:
+            await user.add_roles(role)
+            # await message.remove_reaction(emoji, user)
 
 
 def make_embedded_message(message: Message) -> list[Embed]:
