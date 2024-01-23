@@ -172,6 +172,30 @@ async def reaction_role(interaction: Interaction, emoji: str, role: Role, timeou
     asyncio.create_task(reaction_role_listener(message, emoji, role, timeout))
 
 
+@OIS.slash_command(name="count_pinned", description="Count the number of pinned messages in a channel by a user")
+async def count_pinned(interaction: Interaction, user: Member, channel: Optional[TextChannel] = SlashOption(required=False)) -> None:
+    pinned: List[Message]
+    if channel is None:
+        pinned_in_channel: dict[TextChannel, List[Message]] = {}
+        for channel in interaction.guild.text_channels:
+            pinned_in_channel[channel] = await channel.pins()
+        pinned = [message for channel in pinned_in_channel.values() for message in channel if message.author == user]
+        embed_ = Embed(title=f"Pinned messages by {user.display_name}")
+        for channel, messages in pinned_in_channel.items():
+            pinned_ = [message for message in messages if message.author == user]
+            if len(pinned_) > 0:
+                embed_.add_field(name=channel.name, value=f"{len(pinned_)} pinned messages")
+        embed_.description = f"{user.mention} has {len(pinned)} pinned messages in {interaction.guild.name}"
+        await interaction.channel.send(embed=embed_)
+    else:
+        pinned = await channel.pins()
+        pinned = [message for message in pinned if message.author == user]
+        embed_ = Embed(title=f"Pinned messages by {user.display_name}")
+        embed_.description = f"{user.mention} has {len(pinned)} pinned messages in {channel.mention}"
+        await interaction.channel.send(embed=embed_)
+    await interaction.response.send_message("Done", ephemeral=True)
+
+
 async def reaction_role_listener(message: Message, emoji: str, role: Role, timeout_seconds: int=None) -> None:
     while True:
         try:
