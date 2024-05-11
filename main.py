@@ -144,7 +144,14 @@ async def hall_of_fame(interaction: Interaction, source_channel: TextChannel) ->
             except HTTPException:
                 await target_channel.send("<Error-processing-message>")
         else:
-            await target_channel.send(embeds=embedded_response)
+            try:
+                await target_channel.send(embeds=embedded_response)
+            except nextcord.errors.HTTPException as e:
+                if (e.code == 50035):
+                    print("embeds >= 10; skipping embeds")
+                    await target_channel.send(embed=embedded_response[0])
+                else:
+                    raise e
     await interaction.channel.send(f"Hall of Fame for {source_channel.mention} created in {target_channel.mention}!")
 
 
